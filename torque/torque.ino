@@ -14,7 +14,7 @@ void setup() {
       startAccel[i] = startAccel[0];
     }
     endAccel = {0, 0, 0};
-    Bean.setLed(0,255,0);  // green
+    Bean.setLed(0, 255, 0);  // green
 }
 
 // the loop routine runs over and over again forever:
