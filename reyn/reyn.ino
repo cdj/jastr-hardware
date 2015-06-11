@@ -1,6 +1,19 @@
 #include <avr/sleep.h> // For sleep functionality
 #include <Wire.h> // For accelerometer/gyro
 
+// nRF8001 Bluetooth Low Energy Breakout from Adafruit
+//  Code based on Adafruit Bluefruit Low Energy nRF8001 Print echo demo
+#include <SPI.h>
+#include "Adafruit_BLE_UART.h"
+
+// Connect CLK/MISO/MOSI to hardware SPI
+// e.g. On UNO & compatible: CLK = 13, MISO = 12, MOSI = 11
+#define ADAFRUITBLE_REQ 10
+#define ADAFRUITBLE_RDY 2     // This should be an interrupt pin, on Uno thats #2 or #3
+#define ADAFRUITBLE_RST 9
+
+Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
+
 // hc-sr04 ultrasonic 4-pin sensor
 // http://www.instructables.com/id/Improve-Ultrasonic-Range-Sensor-Accuracy/?ALLSTEPS
 long temperature = 0; // Set temperature variable
@@ -21,18 +34,49 @@ long startStable = 0;
 const long stablizationTime = 2000;
 
 void setup() {
+  Serial.begin(9600);
+  while(!Serial); // Leonardo/Micro should wait for serial init
+  Serial.println(F("Jastr Reyn Prototype"));
+  BTLEserial.setDeviceName("REYN"); /* 7 characters max! */
+  BTLEserial.begin();
+
   // initialize accel/gyro/temp module
   Wire.begin();
   Wire.beginTransmission(MPU);
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
-
-  Serial.begin(9600);
 }
+
+/**************************************************************************/
+/*!
+    Constantly checks for new events on the nRF8001
+*/
+/**************************************************************************/
+aci_evt_opcode_t laststatus = ACI_EVT_DISCONNECTED;
 
 void loop() {
   if(notMeasured) {
+    // Tell the nRF8001 to do whatever it should be working on.
+    BTLEserial.pollACI();
+    // Ask what is our current status
+    aci_evt_opcode_t status = BTLEserial.getState();
+    // If the status changed....
+    if (status != laststatus) {
+      // print it out!
+      if (status == ACI_EVT_DEVICE_STARTED) {
+          Serial.println(F("* Advertising started"));
+      }
+      if (status == ACI_EVT_CONNECTED) {
+          Serial.println(F("* Connected!"));
+      }
+      if (status == ACI_EVT_DISCONNECTED) {
+          Serial.println(F("* Disconnected or advertising timed out"));
+      }
+      // OK set the last status change to this one
+      laststatus = status;
+    }
+    
     Wire.beginTransmission(MPU);
     Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
     Wire.endTransmission(false);
@@ -79,6 +123,42 @@ void loop() {
             notMeasured = false;
             // startStable = 0;
             // lastStable = 0;
+
+
+            // Bluetooth communication
+            if (status == ACI_EVT_CONNECTED) {
+              // Lets see if there's any data for us!
+              if (BTLEserial.available()) {
+                Serial.print("* ");
+                Serial.print(BTLEserial.available());
+                Serial.println(F(" bytes available from BTLE"));
+              }
+              // OK while we still have something to read, get a character and print it out
+              while (BTLEserial.available()) {
+                char c = BTLEserial.read();
+                Serial.print(c);
+              }
+  
+              // Next up, see if we have any data to get from the Serial console
+              if (Serial.available()) {
+                // Read a line from Serial
+                Serial.setTimeout(100); // 100 millisecond timeout
+                String s = Serial.readString();
+
+                // We need to convert the line to bytes, no more than 20 at this time
+                uint8_t sendbuffer[20];
+                s.getBytes(sendbuffer, 20);
+                char sendbuffersize = min(20, s.length());
+
+                Serial.print(F("\n* Sending -> \""));
+                Serial.print((char *)sendbuffer);
+                Serial.println("\"");
+
+                // write the data
+                BTLEserial.write(sendbuffer, sendbuffersize);
+              }
+            }
+
             break;
           }
         }
