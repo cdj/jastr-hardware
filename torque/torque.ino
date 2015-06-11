@@ -1,4 +1,4 @@
-#define numHistory  10; // number of most recent accel readings to keep
+#define numHistory  10 // number of most recent accel readings to keep
 
 int currentHistory = 0; // current accel history entry
 uint16_t impactScalar = 0;
