@@ -2,6 +2,7 @@
 #include <Wire.h> // For accelerometer/gyro
 
 // hc-sr04 ultrasonic 4-pin sensor
+// http://www.instructables.com/id/Improve-Ultrasonic-Range-Sensor-Accuracy/?ALLSTEPS
 long temperature = 0; // Set temperature variable
 boolean debug = true; // For serial communication set debug to true, for faster code set debug to false
 long duration, cm; // Set time and cm for distance sensing
@@ -20,11 +21,13 @@ long startStable = 0;
 const long stablizationTime = 2000;
 
 void setup() {
+  // initialize accel/gyro/temp module
   Wire.begin();
   Wire.beginTransmission(MPU);
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
+
   Serial.begin(9600);
 }
 
@@ -43,6 +46,7 @@ void loop() {
     GyZ = Wire.read()<<8|Wire.read();  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
     temperature = Tmp / 340.00 + 36.53;  //equation for temperature in degrees C from datasheet
     
+    // make sure bottle is standing up straight
     if(GyX < gyroTolerance && GyY < gyroTolerance) {
       // and not accelerating
       while(AcX < accelTolerance && AcY < accelTolerance && AcZ < accelTolerance) {
@@ -80,10 +84,12 @@ void loop() {
         }
       }
     }
-  } else { // Put to sleep, the level was recorded
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);   // sleep mode is set here
-    sleep_enable();          // enables the sleep bit in the mcucr register
-    sleep_mode();            // here the device is actually put to sleep!!
+  } else {
+    // Put to sleep becuase the level was recorded
+    // http://playground.arduino.cc/Learning/ArduinoSleepCode
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN); // sleep mode is set here
+    sleep_enable();                      // enables the sleep bit in the mcucr register
+    sleep_mode();                        // here the device is actually put to sleep!!
   }
 }
 
