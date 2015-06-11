@@ -1,6 +1,6 @@
 uint16_t impactScalar = 0;
-uint16_t safetyPoint = 500;
 AccelerationReading startAccel = {0, 0, 0};
+uint16_t safetyPoint = 165; // predefined "danger" impact, presumable determined from research
 AccelerationReading endAccel = {0, 0, 0};
 
 void setup() {
