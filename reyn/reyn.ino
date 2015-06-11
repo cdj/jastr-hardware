@@ -22,16 +22,19 @@ long duration, cm; // Set time and cm for distance sensing
 int trig = 10, 
     echo = 9; // Set pins for trig and echo
 
-// accel/gyro
+// MPU-6050 Accelerometer + Gyro
 const int MPU = 0x68;  // I2C address of the MPU-6050
 int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
 const int16_t gyroTolerance = 5;
 const int16_t accelTolerance = 5;
 
 bool notMeasured = true;
+long reading = 0;
 long lastStable = 0;
 long startStable = 0;
 const long stablizationTime = 2000;
+const long crossSectionalArea = 75; // (cm^2) Set this for actual bottle
+const long cubicCmInCup = 236.588236; // 1 US cup = 236.588236 cubic centimeters
 
 void setup() {
   Serial.begin(9600);
@@ -104,7 +107,9 @@ void loop() {
 
             // take reading
             if (debug) {
-              Serial.println("Temp: " + temperature);
+              Serial.print("Temp: ");
+              Serial.print(temperature);
+              Serial.println(" C");
             }
             // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
             pinMode(trig, OUTPUT);
@@ -116,10 +121,16 @@ void loop() {
             duration = pulseIn(echo, HIGH);
             cm = microsecondsToCentimeters(duration, temperature);
             if (debug) {
-              Serial.println("Distance: " + cm + "cm");
+              Serial.print("Distance: ");
+              Serial.print(cm);
+              Serial.println("cm");
             }
+            
+            reading = cm * crossSectionalArea / cubicCmInCup; // (cm^2) Set this for actual bottle
 
-            Serial.println("Current bottle content: " + reading + " cups");
+            Serial.print("Current bottle content: ");
+            Serial.print(reading);
+            Serial.println(" cups");
             notMeasured = false;
             // startStable = 0;
             // lastStable = 0;
