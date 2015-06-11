@@ -17,7 +17,6 @@ void setup() {
     Bean.setLed(0, 255, 0);  // green
 }
 
-// the loop routine runs over and over again forever:
 void loop() {
     endAccel = Bean.getAcceleration();
     
