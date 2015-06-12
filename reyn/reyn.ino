@@ -52,9 +52,7 @@ void setup() {
 }
 
 /**************************************************************************/
-/*!
-    Constantly checks for new events on the nRF8001
-*/
+/*! Constantly checks for new events on the nRF8001 */
 /**************************************************************************/
 aci_evt_opcode_t laststatus = ACI_EVT_DISCONNECTED;
 
