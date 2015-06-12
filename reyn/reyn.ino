@@ -15,7 +15,7 @@
 Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
 
 // hc-sr04 ultrasonic 4-pin sensor
-// http://www.instructables.com/id/Improve-Ultrasonic-Range-Sensor-Accuracy/?ALLSTEPS
+// http://www.instructables.com/id/Improve-Ultrasonic-Range-Sensor-Accuracy/
 long temperature = 0; // Set temperature variable
 boolean debug = true; // For serial communication set debug to true, for faster code set debug to false
 long duration, cm; // Set time and cm for distance sensing
