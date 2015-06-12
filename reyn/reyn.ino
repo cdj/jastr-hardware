@@ -105,9 +105,9 @@ void loop() {
 
             // take reading
             if (debug) {
-              Serial.print("Temp: ");
-              Serial.print(temperature);
-              Serial.println(" C");
+              BTLEserial.print("Temp: ");
+              BTLEserial.print(temperature);
+              BTLEserial.println(" C");
             }
             // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
             pinMode(trig, OUTPUT);
@@ -119,54 +119,17 @@ void loop() {
             duration = pulseIn(echo, HIGH);
             cm = microsecondsToCentimeters(duration, temperature);
             if (debug) {
-              Serial.print("Distance: ");
-              Serial.print(cm);
-              Serial.println("cm");
+              BTLEserial.print("Dist: ");
+              BTLEserial.print(cm);
+              BTLEserial.println("cm");
             }
             
             reading = cm * crossSectionalArea / cubicCmInCup; // (cm^2) Set this for actual bottle
 
-            Serial.print("Current bottle content: ");
-            Serial.print(reading);
-            Serial.println(" cups");
+            BTLEserial.print("Volume: ");
+            BTLEserial.print(reading);
+            BTLEserial.println(" cups");
             notMeasured = false;
-            // startStable = 0;
-            // lastStable = 0;
-
-
-            // Bluetooth communication
-            if (status == ACI_EVT_CONNECTED) {
-              // Lets see if there's any data for us!
-              if (BTLEserial.available()) {
-                Serial.print("* ");
-                Serial.print(BTLEserial.available());
-                Serial.println(F(" bytes available from BTLE"));
-              }
-              // OK while we still have something to read, get a character and print it out
-              while (BTLEserial.available()) {
-                char c = BTLEserial.read();
-                Serial.print(c);
-              }
-  
-              // Next up, see if we have any data to get from the Serial console
-              if (Serial.available()) {
-                // Read a line from Serial
-                Serial.setTimeout(100); // 100 millisecond timeout
-                String s = Serial.readString();
-
-                // We need to convert the line to bytes, no more than 20 at this time
-                uint8_t sendbuffer[20];
-                s.getBytes(sendbuffer, 20);
-                char sendbuffersize = min(20, s.length());
-
-                Serial.print(F("\n* Sending -> \""));
-                Serial.print((char *)sendbuffer);
-                Serial.println("\"");
-
-                // write the data
-                BTLEserial.write(sendbuffer, sendbuffersize);
-              }
-            }
 
             break;
           }
@@ -175,13 +138,18 @@ void loop() {
     }
   } else {
     // Put to sleep becuase the level was recorded
+    BTLEserial.pollACI();
+    aci_evt_opcode_t status = BTLEserial.getState();
+    if (status == ACI_EVT_CONNECTED) {
+        BTLEserial.println("Sleeping...");
+    }
+   
     // http://playground.arduino.cc/Learning/ArduinoSleepCode
     set_sleep_mode(SLEEP_MODE_PWR_DOWN); // sleep mode is set here
     sleep_enable();                      // enables the sleep bit in the mcucr register
     sleep_mode();                        // here the device is actually put to sleep!!
   }
 }
-
 
 float getVoltage(int pin) {
   return (analogRead(pin) * .004882814); //Converting from 0 to 1024 to 0 to 5v 
