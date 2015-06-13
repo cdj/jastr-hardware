@@ -66,13 +66,13 @@ void loop() {
     if (status != laststatus) {
       // print it out!
       if (status == ACI_EVT_DEVICE_STARTED) {
-          Serial.println(F("* Advertising started"));
+          Serial.println(F("* BTLE Advertising started"));
       }
       if (status == ACI_EVT_CONNECTED) {
-          Serial.println(F("* Connected!"));
+          Serial.println(F("* BTLE Connected!"));
       }
       if (status == ACI_EVT_DISCONNECTED) {
-          Serial.println(F("* Disconnected or advertising timed out"));
+          Serial.println(F("* BTLE Disconnected or advertising timed out"));
       }
       // OK set the last status change to this one
       laststatus = status;
