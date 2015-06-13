@@ -37,6 +37,7 @@ const long crossSectionalArea = 75; // (cm^2) Set this for actual bottle
 const long cubicCmInCup = 236.588236; // 1 US cup = 236.588236 cubic centimeters
 
 void setup() {
+  enablePinInterupt(ADAFRUITBLE_RDY); 
   Serial.begin(9600);
   while(!Serial); // Leonardo/Micro should wait for serial init
   Serial.println(F("Jastr Reyn Prototype"));
@@ -158,4 +159,13 @@ float getVoltage(int pin) {
 long microsecondsToCentimeters(long microseconds, long temp) {
   return (microseconds * (331.3 + 0.606 * temp)) / 2; //Multiplying the speed of sound through a certain temperature of air by the 
                                                       //length of time it takes to reach the object and back, divided by two
+}
+
+// Need to change interrupt pin for BLE connectivity (Pro Trinket has no pin 2)
+// http://forums.adafruit.com/viewtopic.php?f=25&t=59392
+void enablePinInterupt(byte pin)
+{
+    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
+    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
+    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
 }
