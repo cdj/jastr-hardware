@@ -4,12 +4,12 @@
 // nRF8001 Bluetooth Low Energy Breakout from Adafruit
 //  Code based on Adafruit Bluefruit Low Energy nRF8001 Print echo demo
 #include <SPI.h>
-#include "Adafruit_BLE_UART.h"
+#include <Adafruit_BLE_UART.h>
 
 // Connect CLK/MISO/MOSI to hardware SPI
 // e.g. On UNO & compatible: CLK = 13, MISO = 12, MOSI = 11
 #define ADAFRUITBLE_REQ 10
-#define ADAFRUITBLE_RDY 2     // This should be an interrupt pin, on Uno thats #2 or #3
+#define ADAFRUITBLE_RDY 8     // This should be an interrupt pin, on Uno thats #2 or #3
 #define ADAFRUITBLE_RST 9
 
 Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
@@ -19,8 +19,8 @@ Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RD
 long temperature = 0; // Set temperature variable
 boolean debug = true; // For serial communication set debug to true, for faster code set debug to false
 long duration, cm; // Set time and cm for distance sensing
-int trig = 10, 
-    echo = 9; // Set pins for trig and echo
+int trig = 6, 
+    echo = 3; // Set pins for trig and echo
 
 // MPU-6050 Accelerometer + Gyro
 const int MPU = 0x68;  // I2C address of the MPU-6050
