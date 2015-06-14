@@ -157,9 +157,13 @@ float getVoltage(int pin) {
   return (analogRead(pin) * .004882814); //Converting from 0 to 1024 to 0 to 5v 
 }
 
+// Multiplying the speed of sound through a certain temperature of air by the
+// length of time it takes to reach the object and back, divided by two
+// Distance_CM = ((Duration of high level)*(Sonic :340m/s))/2 
+// = ((Duration of high level)*(Sonic :0.034 cm/us))/2 
+// = ((Duration of high level)/(Sonic :29.4 cm/us))/2 
 long microsecondsToCentimeters(long microseconds, long temp) {
-  return (microseconds * (331.3 + 0.606 * temp)) / 2; //Multiplying the speed of sound through a certain temperature of air by the 
-                                                      //length of time it takes to reach the object and back, divided by two
+  return (microseconds * ((331.3 + 0.606 * temp) / 10000)) / 2;
 }
 
 // Need to change interrupt pin for BLE connectivity (Pro Trinket has no pin 2)
