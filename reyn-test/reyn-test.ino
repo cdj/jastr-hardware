@@ -5,8 +5,8 @@
 long temperature = 0; // Set temperature variable
 boolean debug = true; // For serial communication set debug to true, for faster code set debug to false
 long duration, cm; // Set time and cm for distance sensing
-int trig = 6, 
-    echo = 3; // Set pins for trig and echo
+int trig = 5, 
+    echo = 4; // Set pins for trig and echo
 
 // MPU-6050 Accelerometer + Gyro
 // http://playground.arduino.cc/Main/MPU-6050#short
