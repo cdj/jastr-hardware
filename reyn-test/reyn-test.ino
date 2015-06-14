@@ -48,6 +48,7 @@ void loop() {
 
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
   pinMode(trig, OUTPUT);
+  pinMode(echo,INPUT);
   digitalWrite(trig, LOW);
   delayMicroseconds(2);
   digitalWrite(trig, HIGH);
