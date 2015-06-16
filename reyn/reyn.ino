@@ -9,7 +9,7 @@
 // Connect CLK/MISO/MOSI to hardware SPI
 // e.g. On UNO & compatible: CLK = 13, MISO = 12, MOSI = 11
 #define ADAFRUITBLE_REQ 10
-#define ADAFRUITBLE_RDY 8     // This should be an interrupt pin, on Uno thats #2 or #3
+#define ADAFRUITBLE_RDY 2     // This should be an interrupt pin, on Uno thats #2 or #3
 #define ADAFRUITBLE_RST 9
 
 Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
