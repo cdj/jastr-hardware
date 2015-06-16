@@ -34,6 +34,7 @@ long lastStable = 0;
 long startStable = 0;
 const long stablizationTime = 2000;
 const long crossSectionalArea = 75; // (cm^2) Set this for actual bottle
+const long emptyCm = 20; // cm reading when the bottle is empty
 const long cubicCmInCup = 236.588236; // 1 US cup = 236.588236 cubic centimeters
 
 void setup() {
@@ -126,7 +127,8 @@ void loop() {
               BTLEserial.println("cm");
             }
             
-            reading = cm * crossSectionalArea / cubicCmInCup; // (cm^2) Set this for actual bottle
+            reading = (emptyCm - cm) * crossSectionalArea / cubicCmInCup; // (cm^2) Set this for actual bottle
+            if(reading < 0) reading = 0;
 
             BTLEserial.print("Volume: ");
             BTLEserial.print(reading);
