@@ -1,5 +1,18 @@
 #include <Wire.h> // For accelerometer/gyro
 
+// nRF8001 Bluetooth Low Energy Breakout from Adafruit
+//  Code based on Adafruit Bluefruit Low Energy nRF8001 Print echo demo
+#include <SPI.h>
+#include <Adafruit_BLE_UART.h>
+
+// Connect CLK/MISO/MOSI to hardware SPI
+// e.g. On UNO & compatible: CLK = 13, MISO = 12, MOSI = 11
+#define ADAFRUITBLE_REQ 10
+#define ADAFRUITBLE_RDY 2     // This should be an interrupt pin, on Uno thats #2 or #3
+#define ADAFRUITBLE_RST 9
+
+Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
+
 // hc-sr04 ultrasonic 4-pin sensor
 // http://www.instructables.com/id/Improve-Ultrasonic-Range-Sensor-Accuracy/
 long temperature = 0; // Set temperature variable
@@ -23,9 +36,36 @@ void setup() {
 
   Serial.begin(9600);
   Serial.println("Jastr Reyn Prototype Test");
+  BTLEserial.setDeviceName("REYN-T"); /* 7 characters max! */
+  BTLEserial.begin();
 }
 
+/**************************************************************************/
+/*! Constantly checks for new events on the nRF8001 */
+/**************************************************************************/
+aci_evt_opcode_t laststatus = ACI_EVT_DISCONNECTED;
+
 void loop() {
+  // Tell the nRF8001 to do whatever it should be working on.
+  BTLEserial.pollACI();
+  // Ask what is our current status
+  aci_evt_opcode_t status = BTLEserial.getState();
+  // If the status changed....
+  if (status != laststatus) {
+    // print it out!
+    if (status == ACI_EVT_DEVICE_STARTED) {
+        Serial.println(F("* BTLE Advertising started"));
+    }
+    if (status == ACI_EVT_CONNECTED) {
+        Serial.println(F("* BTLE Connected!"));
+    }
+    if (status == ACI_EVT_DISCONNECTED) {
+        Serial.println(F("* BTLE Disconnected or advertising timed out"));
+    }
+    // OK set the last status change to this one
+    laststatus = status;
+  }
+
   Wire.beginTransmission(MPU);
   Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
   Wire.endTransmission(false);
@@ -60,6 +100,22 @@ void loop() {
   Serial.print(cm);
   Serial.println("cm");
   Serial.println("");
+
+  if (status == ACI_EVT_CONNECTED) {
+    // Lets see if there's any data for us!
+    if (BTLEserial.available()) {
+      Serial.print("* "); Serial.print(BTLEserial.available()); Serial.println(F(" bytes available from BTLE"));
+    }
+    // OK while we still have something to read, get a character and print it out
+    while (BTLEserial.available()) {
+      char c = BTLEserial.read();
+      Serial.print(c);
+    }
+
+    // Next up send reading
+    BTLEserial.print(cm);
+    BTLEserial.println("cm | ");
+  }
 
   delay(1000);
 }
