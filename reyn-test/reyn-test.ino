@@ -25,6 +25,7 @@ int trig = 5,
 // http://playground.arduino.cc/Main/MPU-6050#short
 const int MPU = 0x68;  // I2C address of the MPU-6050
 int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
+int gxavg=0, gyavg=0, gxcount=0, gycount=0;
 
 void setup() {
   // initialize accel/gyro/temp module
@@ -85,6 +86,20 @@ void loop() {
   Serial.print(" | GyX = "); Serial.print(GyX);
   Serial.print(" | GyY = "); Serial.print(GyY);
   Serial.print(" | GyZ = "); Serial.println(GyZ);
+  gxavg = (gxavg*gxcount + GyX)/(gxcount+1);
+  gxcount++;
+  Serial.print("Gyro X average = ");
+  Serial.print(gxavg);
+  Serial.print(" (");
+  Serial.print(gxcount);
+  Serial.println(" readings)");
+  gyavg = (gyavg*gycount + GyY)/(gycount+1);
+  gycount++;
+  Serial.print("Gyro Y average = ");
+  Serial.print(gyavg);
+  Serial.print(" (");
+  Serial.print(gycount);
+  Serial.println(" readings)");
 
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
   pinMode(trig, OUTPUT);
