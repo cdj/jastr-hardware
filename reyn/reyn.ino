@@ -25,14 +25,16 @@ int trig = 5,
 // MPU-6050 Accelerometer + Gyro
 const int MPU = 0x68;  // I2C address of the MPU-6050
 int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
-const int16_t gyroTolerance = 5;
+const int16_t gyroTolerance = 100;
+const int16_t gyroXavg = -200;
+const int16_t gyroYavg = 150;
 const int16_t accelTolerance = 5;
 
 bool notMeasured = true;
 long reading = 0;
 long lastStable = 0;
 long startStable = 0;
-const long stablizationTime = 2000;
+const long stablizationTime = 2500;
 const long crossSectionalArea = 75; // (cm^2) Set this for actual bottle
 const long emptyCm = 20; // cm reading when the bottle is empty
 const long cubicCmInCup = 236.588236; // 1 US cup = 236.588236 cubic centimeters
@@ -59,11 +61,12 @@ void setup() {
 aci_evt_opcode_t laststatus = ACI_EVT_DISCONNECTED;
 
 void loop() {
+  aci_evt_opcode_t status;
   if(notMeasured) {
     // Tell the nRF8001 to do whatever it should be working on.
     BTLEserial.pollACI();
     // Ask what is our current status
-    aci_evt_opcode_t status = BTLEserial.getState();
+    status = BTLEserial.getState();
     // If the status changed....
     if (status != laststatus) {
       // print it out!
@@ -94,7 +97,10 @@ void loop() {
     temperature = Tmp / 340.00 + 36.53;  //equation for temperature in degrees C from datasheet
     
     // make sure bottle is standing up straight
-    if(GyX < gyroTolerance && GyY < gyroTolerance) {
+    if((GyX < (gyroXavg + gyroTolerance)) &&
+       (GyX > (gyroYavg - gyroTolerance)) &&
+       (GyY < (gyroYavg + gyroTolerance)) &&
+       (GyY < (gyroYavg - gyroTolerance))) {
       // and not accelerating
       while(AcX < accelTolerance && AcY < accelTolerance && AcZ < accelTolerance) {
         // wait for water to settle
@@ -107,9 +113,9 @@ void loop() {
 
             // take reading
             if (debug) {
-              BTLEserial.print("Temp: ");
-              BTLEserial.print(temperature);
-              BTLEserial.println(" C");
+              Serial.print("Temp: ");
+              Serial.print(temperature);
+              Serial.println(" C");
             }
             // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
             pinMode(trig, OUTPUT);
@@ -122,17 +128,17 @@ void loop() {
             duration = pulseIn(echo, HIGH);
             cm = microsecondsToCentimeters(duration, temperature);
             if (debug) {
-              BTLEserial.print("Dist: ");
-              BTLEserial.print(cm);
-              BTLEserial.println("cm");
+              Serial.print("Dist: ");
+              Serial.print(cm);
+              Serial.println("cm");
             }
             
             reading = (emptyCm - cm) * crossSectionalArea / cubicCmInCup; // (cm^2) Set this for actual bottle
             if(reading < 0) reading = 0;
 
-            BTLEserial.print("Volume: ");
-            BTLEserial.print(reading);
-            BTLEserial.println(" cups");
+            Serial.print("Volume: ");
+            Serial.print(reading);
+            Serial.println(" cups");
             notMeasured = false;
 
             break;
@@ -142,11 +148,14 @@ void loop() {
     }
   } else {
     // Put to sleep becuase the level was recorded
-    BTLEserial.pollACI();
-    aci_evt_opcode_t status = BTLEserial.getState();
-    if (status == ACI_EVT_CONNECTED) {
-        BTLEserial.println("Sleeping...");
+    while(status != ACI_EVT_CONNECTED) {
+      BTLEserial.pollACI();
+      aci_evt_opcode_t status = BTLEserial.getState();
     }
+
+    BTLEserial.print(reading);
+    BTLEserial.println(" cups");
+    BTLEserial.println("Sleeping...");
    
     // http://playground.arduino.cc/Learning/ArduinoSleepCode
     set_sleep_mode(SLEEP_MODE_PWR_DOWN); // sleep mode is set here
